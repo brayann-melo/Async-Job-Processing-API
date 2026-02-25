@@ -180,3 +180,32 @@ Backend & Data Engineering Focus
 LinkedIn: https://linkedin.com/in/brayann-melo-4140b2341
 
 GitHub: https://github.com/brayann-melo
+
+
+## ▶️ Running Locally
+
+npm install
+npm run start
+
+Server runs on:
+http://localhost:3000
+
+
+### Create Job
+
+POST /jobs/email
+
+Body:
+
+{
+  "to": "user@email.com",
+  "subject": "Hello",
+  "body": "Test email"
+}
+
+#Response 
+
+{
+  "id": "uuid",
+  "status": "pending"
+}
