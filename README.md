@@ -207,8 +207,12 @@ Body:
 
 {
   "id": "f3a9c6b2-8d41-4c6f-9c3d-2f7a1b0a9e11",
+  
   "type": "email",
+  
   "status": "pending",
+  
   "attempts": 0,
+  
   "createdAt": "2026-02-25T21:30:12.331Z"
 }
