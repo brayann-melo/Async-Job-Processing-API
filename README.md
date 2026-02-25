@@ -1,98 +1,182 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Async Job Processing API (Email Worker)
+This project simulates how real-world backends handle asynchronous tasks such as email delivery.
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Instead of executing heavy operations during the request lifecycle, the API creates jobs and processes them in the background. This keeps the system responsive while allowing potentially unstable operations to be retried safely.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The goal of this project is to demonstrate how a simple job lifecycle with retries and status tracking can be implemented using NestJS.
 
-## Description
+--- 
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Purpose
 
-## Project setup
+In production systems, operations like sending emails, generating reports or processing files should not block the request-response cycle.
 
-```bash
-$ npm install
-```
+Running them synchronously increases latency and reduces reliability.
 
-## Compile and run the project
+This project explores a lightweight architecture that offloads these operations into background jobs while maintaining visibility over execution status and failures.
 
-```bash
-# development
-$ npm run start
+---
 
-# watch mode
-$ npm run start:dev
+## 🧱 Architecture
 
-# production mode
-$ npm run start:prod
-```
+The system follows a job-based flow: Client → API → Job Creation → Background Processing → Status Tracking
 
-## Run tests
+It is structured into four main layers:
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+### 1. Controller Layer
 
-# test coverage
-$ npm run test:cov
-```
+Handles HTTP requests.
 
-## Deployment
+Responsible for:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- Creating jobs
+- Allowing job status tracking
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Endpoints:
+POST /jobs/email → creates a new email job
+GET /jobs/:id → returns job status
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2. Service Layer
 
-## Resources
+Contains the core execution logic.
 
-Check out a few resources that may come in handy when working with NestJS:
+Responsible for:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Creating jobs
+- Controlling retry attempts
+- Tracking execution time
+- Updating job state
+- Handling failures
 
-## Support
+This layer centralizes execution control and retry strategy.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+--- ### 3. Processor Layer
 
-## Stay in touch
+Executes jobs outside the request lifecycle.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Example:
 
-## License
+EmailProcessor → simulates email delivery
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The controller delegates execution instead of performing the task directly.
+
+---
+
+### 4. Repository Layer
+
+Acts as a persistence layer (in-memory).
+
+Stores:
+
+- job status
+- retry attempts
+- timestamps
+- execution errors
+
+In a production scenario, this would be replaced by a database or queue system.
+
+---
+
+## 🔁 Job Lifecycle
+
+Each job follows this execution flow:
+
+1. Job is created → status: pending
+2. Processor starts execution → status: processing
+3. Email sending is attempted
+4. On success → status becomes completed
+5. On failure:
+- retries until max attempts
+- final status becomes failed if limit is reached
+
+--- ## 📊 Job States
+
+| State | Meaning                 |
+|-------------|----------------------|
+| pending | Waiting for execution | 
+| processing | Currently being executed |
+| completed | Finished successfully |
+| failed | Failed after max retries |
+
+
+---
+
+## 🧪 Example Usage
+
+### Create Email Job
+
+POST /jobs/email Body:
+
+json
+{
+  "to": "user@email.com",
+  "subject": "Hello",
+  "body": "Test email"
+}
+Check Job Status
+
+GET /jobs/{id}
+
+⚙️ Retry Strategy
+
+Each job:
+
+has a max attempt limit of 3
+
+retries automatically on failure
+
+Failures are simulated to demonstrate retry behavior.
+
+🧠 Concepts Demonstrated
+
+This project showcases:
+
+Background job execution
+
+Retry logic
+
+Async system design
+
+Separation of concerns
+
+Job lifecycle tracking
+
+Service-oriented architecture
+
+🛠 Tech Stack
+
+NestJS
+
+TypeScript
+
+UUID
+
+In-memory storage
+
+📦 Possible Improvements
+
+Future evolutions could include:
+
+Redis-based queues
+
+BullMQ integration
+
+Persistent storage (PostgreSQL)
+
+Exponential backoff retry
+
+Observability / monitoring
+
+👨‍💻 Author
+
+Brayann Melo
+Computer Science Student (6th Semester)
+Backend & Data Engineering Focus
+
+LinkedIn: https://linkedin.com/in/brayann-melo-4140b2341
+
+GitHub: https://github.com/brayann-melo
