@@ -204,6 +204,7 @@ Body:
 }
 
 ✅ Response Example
+
 {
   "id": "f3a9c6b2-8d41-4c6f-9c3d-2f7a1b0a9e11",
   "type": "email",
